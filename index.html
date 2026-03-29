@@ -1,0 +1,1685 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>NeuroScan AI — Brain Tumor Classification System</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://code.iconify.design/3/3.1.0/iconify.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+    rel="stylesheet">
+  <script>
+    tailwind.config = { theme: { extend: { fontFamily: { sans: ['Inter', 'sans-serif'] }, colors: { brand: { black: '#050505', dark: '#0a0a0a', gray: '#171717', light: '#e5e5e5' }, neuro: { blue: '#3b82f6', cyan: '#06b6d4', purple: '#8b5cf6', green: '#22c55e', red: '#ef4444', amber: '#f59e0b' } } } } }
+  </script>
+  <style>
+    ::selection {
+      background: #3b82f6;
+      color: #fff
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box
+    }
+
+    .slide {
+      display: none;
+      opacity: 0;
+      transform: translateY(15px) scale(0.98);
+      transition: opacity 0.5s ease, transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
+      height: 100dvh;
+      max-height: 100dvh;
+      width: 100vw;
+      overflow-y: auto;
+      overflow-x: hidden;
+      -webkit-overflow-scrolling: touch;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .slide.active {
+      display: flex;
+      b b
+    }
+
+    .slide.anim {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+
+    .slide::-webkit-scrollbar {
+      width: 3px
+    }
+
+    .slide::-webkit-scrollbar-track {
+      background: transparent
+    }
+
+    .slide::-webkit-scrollbar-thumb {
+      background: #333;
+      border-radius: 4px
+    }
+
+    .bg-grain {
+      position: fixed;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.04'/%3E%3C/svg%3E");
+      mix-blend-mode: overlay;
+      pointer-events: none;
+      z-index: 100
+    }
+
+    .gradient-text {
+      background: linear-gradient(135deg, #3b82f6, #06b6d4, #8b5cf6);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text
+    }
+
+    .gradient-text-green {
+      background: linear-gradient(135deg, #22c55e, #06b6d4);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text
+    }
+
+    .glow-blue {
+      box-shadow: 0 0 40px rgba(59, 130, 246, .1)
+    }
+
+    .glow-purple {
+      box-shadow: 0 0 40px rgba(139, 92, 246, .1)
+    }
+
+    .glow-cyan {
+      box-shadow: 0 0 40px rgba(6, 182, 212, .1)
+    }
+
+    .card-hover {
+      transition: all .3s
+    }
+
+    .card-hover:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, .4)
+    }
+
+    .pulse-dot {
+      animation: pd 2s infinite
+    }
+
+    @keyframes pd {
+
+      0%,
+      100% {
+        opacity: 1;
+        transform: scale(1)
+      }
+
+      50% {
+        opacity: .5;
+        transform: scale(1.5)
+      }
+    }
+
+    .float {
+      animation: fl 6s ease-in-out infinite
+    }
+
+    @keyframes fl {
+
+      0%,
+      100% {
+        transform: translateY(0)
+      }
+
+      50% {
+        transform: translateY(-10px)
+      }
+    }
+
+    .brain-bg {
+      background: radial-gradient(ellipse at 50% 40%, rgba(59, 130, 246, .06) 0%, transparent 70%)
+    }
+
+    .dot-ind {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #333;
+      cursor: pointer;
+      transition: all .3s;
+      flex-shrink: 0
+    }
+
+    .dot-ind.active {
+      background: #3b82f6;
+      width: 18px;
+      border-radius: 3px
+    }
+
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+      padding: 2px 8px;
+      border-radius: 999px;
+      font-size: 9px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+      white-space: nowrap
+    }
+
+    .mri-card {
+      overflow: hidden
+    }
+
+    .mri-card img {
+      transition: transform .5s
+    }
+
+    .mri-card:hover img {
+      transform: scale(1.04)
+    }
+
+    .arch-box {
+      width: 100%;
+      max-width: 380px;
+      padding: 16px 18px;
+      border-radius: 14px;
+      text-align: center;
+      transition: all .3s
+    }
+
+    .arch-box:hover {
+      transform: translateY(-2px)
+    }
+
+    .arch-con {
+      width: 2px;
+      height: 32px;
+      margin: 0 auto;
+      position: relative
+    }
+
+    .arch-con::after {
+      content: '';
+      position: absolute;
+      bottom: -4px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 0;
+      height: 0;
+      border-left: 4px solid transparent;
+      border-right: 4px solid transparent
+    }
+
+    .arch-con.blue {
+      background: linear-gradient(to bottom, rgba(59, 130, 246, .5), rgba(59, 130, 246, .12))
+    }
+
+    .arch-con.blue::after {
+      border-top: 5px solid rgba(59, 130, 246, .4)
+    }
+
+    .arch-con.green {
+      background: linear-gradient(to bottom, rgba(34, 197, 94, .5), rgba(34, 197, 94, .12))
+    }
+
+    .arch-con.green::after {
+      border-top: 5px solid rgba(34, 197, 94, .4)
+    }
+
+    .arch-con.purple {
+      background: linear-gradient(to bottom, rgba(139, 92, 246, .5), rgba(139, 92, 246, .12))
+    }
+
+    .arch-con.purple::after {
+      border-top: 5px solid rgba(139, 92, 246, .4)
+    }
+
+    .arch-con.amber {
+      background: linear-gradient(to bottom, rgba(245, 158, 11, .5), rgba(245, 158, 11, .12))
+    }
+
+    .arch-con.amber::after {
+      border-top: 5px solid rgba(245, 158, 11, .4)
+    }
+
+    .si {
+      width: 100%;
+      max-width: 1100px;
+      margin: auto 0;
+      padding: 20px 14px 110px;
+      flex-shrink: 0;
+    }
+
+    @media(min-width:480px) {
+      .si {
+        padding: 28px 20px 110px
+      }
+    }
+
+    @media(min-width:768px) {
+      .si {
+        padding: 36px 28px 110px
+      }
+    }
+
+    @media(min-width:1024px) {
+      .si {
+        padding: 40px 32px 110px
+      }
+    }
+
+    .screenshot-frame {
+      border-radius: 12px;
+      overflow: hidden;
+      border: 1px solid #262626;
+      background: #0a0a0a
+    }
+
+    .screenshot-frame img {
+      width: 100%;
+      height: auto;
+      display: block
+    }
+  </style>
+</head>
+
+<body class="bg-brand-black text-white font-sans overflow-hidden">
+  <div class="bg-grain"></div>
+
+  <!-- SLIDE 1 -->
+  <div class="slide brain-bg" id="slide-1">
+    <div class="si flex flex-col items-center justify-center text-center" style="min-height:calc(100dvh - 120px)">
+      <div
+        class="absolute top-0 left-1/2 -translate-x-1/2 w-[400px] h-[400px] rounded-full bg-neuro-blue/5 blur-[90px] pointer-events-none">
+      </div>
+      <div class="relative z-10">
+        <div class="flex items-center justify-center gap-2 mb-5">
+          <div class="w-9 h-9 rounded-xl bg-neuro-blue/20 border border-neuro-blue/30 flex items-center justify-center">
+            <span class="iconify text-neuro-blue text-lg" data-icon="lucide:brain"></span>
+          </div><span class="tag bg-neuro-blue/10 text-neuro-blue border border-neuro-blue/20">AI-Powered</span>
+        </div>
+        <h1 class="text-5xl sm:text-7xl md:text-8xl font-extrabold tracking-tighter leading-[.9] mb-4"><span
+            class="gradient-text">NeuroScan</span><span class="text-white"> AI</span></h1>
+        <p class="text-base sm:text-xl md:text-2xl text-neutral-400 font-light mb-3 tracking-tight">Brain Tumor
+          Classification System</p>
+        <div
+          class="flex items-center justify-center gap-2 mb-8 text-xs sm:text-sm text-neutral-500 flex-wrap justify-center">
+          <span class="px-3 py-1 rounded-full border border-neutral-800 bg-neutral-900/50">MERN Stack</span><span
+            class="text-neutral-700">+</span><span
+            class="px-3 py-1 rounded-full border border-neutral-800 bg-neutral-900/50">YOLOv8 Deep Learning</span>
+        </div>
+        <div class="flex items-center justify-center gap-1.5 mb-10 flex-wrap justify-center">
+          <p class="text-neutral-500 text-xs sm:text-sm">Presented by:</p>
+          <p class="text-white font-medium text-xs sm:text-sm">Anand TP</p><span
+            class="text-neutral-700 text-xs">•</span>
+          <p class="text-white font-medium text-xs sm:text-sm">Haridev D</p><span
+            class="text-neutral-700 text-xs">•</span>
+          <p class="text-white font-medium text-xs sm:text-sm">Adhwaith M</p><span
+            class="text-neutral-700 text-xs">•</span>
+          <p class="text-white font-medium text-xs sm:text-sm">Midhun U</p>
+        </div>
+        <button onclick="goToSlide(2)"
+          class="group flex items-center gap-2 text-sm text-neutral-500 hover:text-neuro-blue transition-colors mx-auto"><span>Begin
+            Presentation</span><span class="iconify text-lg group-hover:translate-x-1 transition-transform"
+            data-icon="lucide:arrow-right"></span></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 2 -->
+  <div class="slide" id="slide-2">
+    <div class="si">
+      <span class="tag bg-neuro-red/10 text-neuro-red border border-neuro-red/20"><span class="iconify text-[10px]"
+          data-icon="lucide:alert-triangle"></span> Problem</span>
+      <h2 class="text-2xl sm:text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight mt-3 mb-6 sm:mb-10">Problem
+        Statement</h2>
+      <div class="grid md:grid-cols-2 gap-5 sm:gap-8">
+        <div class="space-y-3 sm:space-y-4">
+          <p class="text-neutral-400 text-sm sm:text-lg leading-relaxed">Brain tumor diagnosis is <span
+              class="text-white font-medium">critical in healthcare</span>. Early detection saves lives.</p>
+          <div class="flex items-start gap-3 p-3 rounded-xl bg-neutral-900/50 border border-neutral-800 card-hover">
+            <div class="w-9 h-9 rounded-lg bg-neuro-red/10 flex items-center justify-center flex-shrink-0"><span
+                class="iconify text-neuro-red text-sm" data-icon="lucide:clock"></span></div>
+            <div>
+              <p class="text-white font-medium text-sm mb-0.5">Time-Consuming</p>
+              <p class="text-neutral-500 text-xs sm:text-sm">Manual MRI analysis takes significant time per scan</p>
+            </div>
+          </div>
+          <div class="flex items-start gap-3 p-3 rounded-xl bg-neutral-900/50 border border-neutral-800 card-hover">
+            <div class="w-9 h-9 rounded-lg bg-neuro-amber/10 flex items-center justify-center flex-shrink-0"><span
+                class="iconify text-neuro-amber text-sm" data-icon="lucide:user-check"></span></div>
+            <div>
+              <p class="text-white font-medium text-sm mb-0.5">Expert Dependency</p>
+              <p class="text-neutral-500 text-xs sm:text-sm">Requires highly trained radiologists</p>
+            </div>
+          </div>
+          <div class="flex items-start gap-3 p-3 rounded-xl bg-neutral-900/50 border border-neutral-800 card-hover">
+            <div class="w-9 h-9 rounded-lg bg-neuro-red/10 flex items-center justify-center flex-shrink-0"><span
+                class="iconify text-neuro-red text-sm" data-icon="lucide:alert-circle"></span></div>
+            <div>
+              <p class="text-white font-medium text-sm mb-0.5">Human Error</p>
+              <p class="text-neutral-500 text-xs sm:text-sm">High chance of misdiagnosis due to fatigue</p>
+            </div>
+          </div>
+        </div>
+        <div class="flex items-center justify-center">
+          <div class="relative">
+            <div
+              class="w-48 h-48 sm:w-60 sm:h-60 rounded-full bg-neuro-red/5 border border-neuro-red/10 flex items-center justify-center">
+              <div
+                class="w-36 h-36 sm:w-44 sm:h-44 rounded-full bg-neuro-red/10 border border-neuro-red/20 flex items-center justify-center">
+                <div class="w-24 h-24 sm:w-32 sm:h-32 rounded-full bg-neuro-red/20 flex items-center justify-center">
+                  <span class="iconify text-neuro-red text-3xl sm:text-5xl" data-icon="lucide:scan-line"></span>
+                </div>
+              </div>
+            </div>
+            <div
+              class="absolute -bottom-3 left-1/2 -translate-x-1/2 px-3 py-1.5 rounded-lg bg-brand-black border border-neuro-green/30">
+              <p class="text-neuro-green text-[10px] sm:text-xs font-semibold flex items-center gap-1.5"><span
+                  class="iconify" data-icon="lucide:sparkles"></span>AI Solution</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 3 -->
+  <div class="slide" id="slide-3">
+    <div class="si">
+      <span class="tag bg-neuro-blue/10 text-neuro-blue border border-neuro-blue/20"><span class="iconify text-[10px]"
+          data-icon="lucide:target"></span> Goal</span>
+      <h2 class="text-2xl sm:text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight mt-3 mb-6 sm:mb-10">Objectives
+      </h2>
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-5">
+        <div
+          class="p-4 sm:p-5 rounded-2xl bg-neutral-900/50 border border-neutral-800 card-hover relative overflow-hidden">
+          <div class="absolute top-0 right-0 w-24 h-24 bg-neuro-blue/5 rounded-full -translate-y-1/2 translate-x-1/2">
+          </div>
+          <div class="relative z-10">
+            <div
+              class="w-10 h-10 rounded-xl bg-neuro-blue/10 border border-neuro-blue/20 flex items-center justify-center mb-3">
+              <span class="iconify text-neuro-blue text-lg" data-icon="lucide:image-search"></span>
+            </div>
+            <h3 class="text-white font-semibold text-sm sm:text-lg mb-1">Classify MRI Images</h3>
+            <p class="text-neutral-500 text-xs sm:text-sm">Use AI to classify brain MRI scans into tumor categories</p>
+          </div>
+        </div>
+        <div
+          class="p-4 sm:p-5 rounded-2xl bg-neutral-900/50 border border-neutral-800 card-hover relative overflow-hidden">
+          <div class="absolute top-0 right-0 w-24 h-24 bg-neuro-cyan/5 rounded-full -translate-y-1/2 translate-x-1/2">
+          </div>
+          <div class="relative z-10">
+            <div
+              class="w-10 h-10 rounded-xl bg-neuro-cyan/10 border border-neuro-cyan/20 flex items-center justify-center mb-3">
+              <span class="iconify text-neuro-cyan text-lg" data-icon="lucide:zap"></span>
+            </div>
+            <h3 class="text-white font-semibold text-sm sm:text-lg mb-1">Fast & Accurate</h3>
+            <p class="text-neutral-500 text-xs sm:text-sm">Real-time results with confidence scores</p>
+          </div>
+        </div>
+        <div
+          class="p-4 sm:p-5 rounded-2xl bg-neutral-900/50 border border-neutral-800 card-hover relative overflow-hidden">
+          <div class="absolute top-0 right-0 w-24 h-24 bg-neuro-purple/5 rounded-full -translate-y-1/2 translate-x-1/2">
+          </div>
+          <div class="relative z-10">
+            <div
+              class="w-10 h-10 rounded-xl bg-neuro-purple/10 border border-neuro-purple/20 flex items-center justify-center mb-3">
+              <span class="iconify text-neuro-purple text-lg" data-icon="lucide:history"></span>
+            </div>
+            <h3 class="text-white font-semibold text-sm sm:text-lg mb-1">Scan History</h3>
+            <p class="text-neutral-500 text-xs sm:text-sm">Maintain complete patient scan records</p>
+          </div>
+        </div>
+        <div
+          class="p-4 sm:p-5 rounded-2xl bg-neutral-900/50 border border-neutral-800 card-hover relative overflow-hidden">
+          <div class="absolute top-0 right-0 w-24 h-24 bg-neuro-green/5 rounded-full -translate-y-1/2 translate-x-1/2">
+          </div>
+          <div class="relative z-10">
+            <div
+              class="w-10 h-10 rounded-xl bg-neuro-green/10 border border-neuro-green/20 flex items-center justify-center mb-3">
+              <span class="iconify text-neuro-green text-lg" data-icon="lucide:globe"></span>
+            </div>
+            <h3 class="text-white font-semibold text-sm sm:text-lg mb-1">Web System</h3>
+            <p class="text-neutral-500 text-xs sm:text-sm">Full-stack app accessible from any browser</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 4 -->
+  <div class="slide" id="slide-4">
+    <div class="si">
+      <span class="tag bg-neuro-purple/10 text-neuro-purple border border-neuro-purple/20"><span
+          class="iconify text-[10px]" data-icon="lucide:sparkles"></span> Unique</span>
+      <h2 class="text-2xl sm:text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight mt-3 mb-6 sm:mb-10">What Makes
+        This <span class="gradient-text">Unique</span></h2>
+      <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2.5 sm:gap-4">
+        <div class="text-center p-3 sm:p-4 rounded-2xl bg-neutral-900/50 border border-neutral-800 card-hover">
+          <div
+            class="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-gradient-to-br from-neuro-blue to-neuro-purple flex items-center justify-center mx-auto mb-2 sm:mb-3">
+            <span class="iconify text-white text-lg sm:text-xl" data-icon="lucide:cpu"></span>
+          </div>
+          <p class="text-white text-[11px] sm:text-sm font-medium mb-0.5">Real DL Model</p>
+          <p class="text-neutral-600 text-[9px] sm:text-xs">Not API-based</p>
+        </div>
+        <div class="text-center p-3 sm:p-4 rounded-2xl bg-neutral-900/50 border border-neutral-800 card-hover">
+          <div
+            class="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-gradient-to-br from-neuro-green to-neuro-cyan flex items-center justify-center mx-auto mb-2 sm:mb-3">
+            <span class="iconify text-white text-lg sm:text-xl" data-icon="lucide:layers"></span>
+          </div>
+          <p class="text-white text-[11px] sm:text-sm font-medium mb-0.5">Full-Stack</p>
+          <p class="text-neutral-600 text-[9px] sm:text-xs">MERN integration</p>
+        </div>
+        <div class="text-center p-3 sm:p-4 rounded-2xl bg-neutral-900/50 border border-neutral-800 card-hover">
+          <div
+            class="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-gradient-to-br from-neuro-amber to-neuro-red flex items-center justify-center mx-auto mb-2 sm:mb-3">
+            <span class="iconify text-white text-lg sm:text-xl" data-icon="lucide:boxes"></span>
+          </div>
+          <p class="text-white text-[11px] sm:text-sm font-medium mb-0.5">Microservices</p>
+          <p class="text-neutral-600 text-[9px] sm:text-xs">Architecture</p>
+        </div>
+        <div class="text-center p-3 sm:p-4 rounded-2xl bg-neutral-900/50 border border-neutral-800 card-hover">
+          <div
+            class="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-gradient-to-br from-neuro-cyan to-neuro-blue flex items-center justify-center mx-auto mb-2 sm:mb-3">
+            <span class="iconify text-white text-lg sm:text-xl" data-icon="lucide:cloud"></span>
+          </div>
+          <p class="text-white text-[11px] sm:text-sm font-medium mb-0.5">Cloud Deploy</p>
+          <p class="text-neutral-600 text-[9px] sm:text-xs">3 services</p>
+        </div>
+        <div
+          class="text-center p-3 sm:p-4 rounded-2xl bg-neutral-900/50 border border-neutral-800 card-hover col-span-2 sm:col-span-1">
+          <div
+            class="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-gradient-to-br from-neuro-purple to-neuro-blue flex items-center justify-center mx-auto mb-2 sm:mb-3">
+            <span class="iconify text-white text-lg sm:text-xl" data-icon="lucide:activity"></span>
+          </div>
+          <p class="text-white text-[11px] sm:text-sm font-medium mb-0.5">Real-Time</p>
+          <p class="text-neutral-600 text-[9px] sm:text-xs">Prediction system</p>
+        </div>
+      </div>
+      <div class="mt-5 sm:mt-8 p-3 sm:p-4 rounded-2xl border border-neuro-blue/20 bg-neuro-blue/5 glow-blue">
+        <div class="flex items-start gap-2.5"><span class="iconify text-neuro-blue text-base flex-shrink-0 mt-0.5"
+            data-icon="lucide:info"></span>
+          <p class="text-neutral-300 text-xs sm:text-sm"><span class="text-white font-medium">Key Differentiator:</span>
+            Most student projects use pre-built APIs. This trains its own YOLOv8 model and deploys it as an independent
+            microservice.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 5 -->
+  <div class="slide" id="slide-5">
+    <div class="si">
+      <span class="tag bg-neuro-amber/10 text-neuro-amber border border-neuro-amber/20"><span
+          class="iconify text-[10px]" data-icon="lucide:scale"></span> Important</span>
+      <h2 class="text-2xl sm:text-4xl md:text-5xl font-bold tracking-tight mt-3 mb-2 sm:mb-3">Classification <span
+          class="text-neutral-600">vs</span> Detection</h2>
+      <p class="text-neutral-500 text-xs sm:text-base mb-5 sm:mb-8">Understanding the fundamental difference</p>
+      <div class="grid sm:grid-cols-2 gap-3 sm:gap-6">
+        <div class="p-4 sm:p-6 rounded-2xl border-2 border-neuro-green/30 bg-neuro-green/5 relative glow-cyan">
+          <div class="absolute top-3 right-3"><span
+              class="tag bg-neuro-green/20 text-neuro-green border border-neuro-green/30 text-[8px]"><span
+                class="iconify text-[8px]" data-icon="lucide:check"></span>Used</span></div>
+          <div
+            class="w-11 h-11 rounded-2xl bg-neuro-green/10 border border-neuro-green/20 flex items-center justify-center mb-3">
+            <span class="iconify text-neuro-green text-lg" data-icon="lucide:tag"></span>
+          </div>
+          <h3 class="text-base sm:text-xl font-bold text-white mb-3">Classification</h3>
+          <ul class="space-y-2">
+            <li class="flex items-start gap-2"><span class="iconify text-neuro-green mt-0.5 flex-shrink-0 text-sm"
+                data-icon="lucide:check-circle-2"></span><span class="text-neutral-300 text-xs sm:text-sm">Predicts
+                <span class="text-white font-medium">tumor type</span></span></li>
+            <li class="flex items-start gap-2"><span class="iconify text-neuro-green mt-0.5 flex-shrink-0 text-sm"
+                data-icon="lucide:check-circle-2"></span><span class="text-neutral-300 text-xs sm:text-sm">Output: class
+                label</span></li>
+            <li class="flex items-start gap-2"><span class="iconify text-neuro-green mt-0.5 flex-shrink-0 text-sm"
+                data-icon="lucide:check-circle-2"></span><span class="text-neutral-300 text-xs sm:text-sm">Answers:
+                <span class="text-white font-medium">"What is this?"</span></span></li>
+          </ul>
+          <div class="mt-3 p-2.5 rounded-xl bg-brand-black/50 flex items-center gap-2.5">
+            <div class="w-10 h-10 rounded-lg bg-neutral-800 flex items-center justify-center"><span
+                class="iconify text-neutral-500 text-lg" data-icon="lucide:brain"></span></div>
+            <div>
+              <p class="text-neuro-green font-semibold text-xs">→ Glioma</p>
+              <p class="text-neutral-600 text-[10px]">94.2%</p>
+            </div>
+          </div>
+        </div>
+        <div class="p-4 sm:p-6 rounded-2xl border border-neutral-800 bg-neutral-900/30 relative">
+          <div class="absolute top-3 right-3"><span
+              class="tag bg-neutral-800 text-neutral-500 border border-neutral-700 text-[8px]"><span
+                class="iconify text-[8px]" data-icon="lucide:x"></span>Not Used</span></div>
+          <div
+            class="w-11 h-11 rounded-2xl bg-neutral-800 border border-neutral-700 flex items-center justify-center mb-3">
+            <span class="iconify text-neutral-500 text-lg" data-icon="lucide:scan"></span>
+          </div>
+          <h3 class="text-base sm:text-xl font-bold text-neutral-500 mb-3">Detection</h3>
+          <ul class="space-y-2">
+            <li class="flex items-start gap-2"><span class="iconify text-neutral-700 mt-0.5 flex-shrink-0 text-sm"
+                data-icon="lucide:x-circle"></span><span class="text-neutral-500 text-xs sm:text-sm">Finds <span
+                  class="text-neutral-400 font-medium">tumor location</span></span></li>
+            <li class="flex items-start gap-2"><span class="iconify text-neutral-700 mt-0.5 flex-shrink-0 text-sm"
+                data-icon="lucide:x-circle"></span><span class="text-neutral-500 text-xs sm:text-sm">Output: coordinates
+                + label</span></li>
+            <li class="flex items-start gap-2"><span class="iconify text-neutral-700 mt-0.5 flex-shrink-0 text-sm"
+                data-icon="lucide:x-circle"></span><span class="text-neutral-500 text-xs sm:text-sm">Answers: <span
+                  class="text-neutral-400 font-medium">"Where is it?"</span></span></li>
+          </ul>
+          <div class="mt-3 p-2.5 rounded-xl bg-brand-black/50 flex items-center gap-2.5 opacity-30">
+            <div class="w-10 h-10 rounded-lg bg-neutral-800 flex items-center justify-center relative"><span
+                class="iconify text-neutral-500 text-lg" data-icon="lucide:brain"></span>
+              <div class="absolute inset-1 border-2 border-dashed border-neuro-red/50 rounded-md"></div>
+            </div>
+            <div>
+              <p class="text-neutral-500 font-semibold text-xs">→ [x,y,w,h]</p>
+              <p class="text-neutral-700 text-[10px]">Bounding box</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 6 — Architecture -->
+  <div class="slide" id="slide-6">
+    <div class="si flex flex-col items-center">
+      <div class="text-center mb-6 sm:mb-8">
+        <span class="tag bg-neuro-blue/10 text-neuro-blue border border-neuro-blue/20 inline-flex"><span
+            class="iconify text-[10px]" data-icon="lucide:git-branch"></span> Core</span>
+        <h2 class="text-2xl sm:text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight mt-3">System <span
+            class="gradient-text">Architecture</span></h2>
+      </div>
+      <div class="w-full flex flex-col items-center">
+        <div class="arch-box bg-neutral-900/80 border border-neutral-700"><span class="iconify text-2xl text-white mb-1"
+            data-icon="lucide:user"></span>
+          <p class="text-white font-semibold text-sm sm:text-base">User</p>
+          <p class="text-neutral-600 text-[10px] sm:text-xs">Browser</p>
+        </div>
+        <div class="arch-con blue"></div>
+        <div class="arch-box bg-neuro-blue/5 border border-neuro-blue/30 glow-blue">
+          <div class="flex items-center justify-center gap-2 mb-1"><span
+              class="iconify text-lg sm:text-xl text-neuro-blue" data-icon="lucide:monitor"></span><span
+              class="tag bg-neuro-blue/20 text-neuro-blue text-[8px]">VERCEL</span></div>
+          <p class="text-white font-semibold text-sm sm:text-base">Frontend</p>
+          <p class="text-neuro-blue/60 text-[10px] sm:text-xs">React + Vite + Tailwind</p>
+        </div>
+        <div class="arch-con green"></div>
+        <div class="arch-box bg-neuro-green/5 border border-neuro-green/30">
+          <div class="flex items-center justify-center gap-2 mb-1"><span
+              class="iconify text-lg sm:text-xl text-neuro-green" data-icon="lucide:server"></span><span
+              class="tag bg-neuro-green/20 text-neuro-green text-[8px]">RENDER</span></div>
+          <p class="text-white font-semibold text-sm sm:text-base">Backend API</p>
+          <p class="text-neuro-green/60 text-[10px] sm:text-xs">Node.js + Express + JWT</p>
+        </div>
+        <div class="arch-con purple"></div>
+        <div class="arch-box bg-neuro-purple/5 border border-neuro-purple/30 glow-purple">
+          <div class="flex items-center justify-center gap-2 mb-1"><span
+              class="iconify text-lg sm:text-xl text-neuro-purple" data-icon="lucide:cpu"></span><span
+              class="tag bg-neuro-purple/20 text-neuro-purple text-[8px]">HUGGING FACE</span></div>
+          <p class="text-white font-semibold text-sm sm:text-base">ML Service</p>
+          <p class="text-neuro-purple/60 text-[10px] sm:text-xs">FastAPI + YOLOv8 + PyTorch</p>
+        </div>
+        <div class="arch-con amber"></div>
+        <div class="arch-box bg-neuro-amber/5 border border-neuro-amber/30">
+          <div class="flex items-center justify-center gap-2 mb-1"><span
+              class="iconify text-lg sm:text-xl text-neuro-amber" data-icon="lucide:database"></span><span
+              class="tag bg-neuro-amber/20 text-neuro-amber text-[8px]">ATLAS</span></div>
+          <p class="text-white font-semibold text-sm sm:text-base">Database</p>
+          <p class="text-neuro-amber/60 text-[10px] sm:text-xs">MongoDB Atlas (Cloud)</p>
+        </div>
+        <div class="mt-5 p-3 rounded-xl border border-neutral-800 bg-neutral-900/30 text-center w-full max-w-sm">
+          <p class="text-neutral-500 text-[10px] sm:text-xs flex items-center justify-center gap-1.5"><span
+              class="iconify text-neuro-blue" data-icon="lucide:arrow-down-up"></span>Data flows top→bottom (request)
+            and bottom→top (response)</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 7 — Tech Stack -->
+  <div class="slide" id="slide-7">
+    <div class="si">
+      <span class="tag bg-neuro-cyan/10 text-neuro-cyan border border-neuro-cyan/20"><span class="iconify text-[10px]"
+          data-icon="lucide:code-2"></span> Stack</span>
+      <h2 class="text-2xl sm:text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight mt-3 mb-6 sm:mb-8">Technology
+        Stack</h2>
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4">
+        <div class="p-3 sm:p-4 rounded-2xl bg-neutral-900/50 border border-neutral-800 card-hover">
+          <div class="flex items-center gap-2 mb-3"><span class="iconify text-[#61DAFB] text-lg sm:text-xl"
+              data-icon="logos:react"></span>
+            <h3 class="text-white font-semibold text-xs sm:text-sm">Frontend</h3>
+          </div>
+          <ul class="space-y-1.5">
+            <li class="flex items-center gap-1.5 text-[10px] sm:text-xs text-neutral-400"><span
+                class="w-1 h-1 rounded-full bg-[#61DAFB] flex-shrink-0"></span>React 18</li>
+            <li class="flex items-center gap-1.5 text-[10px] sm:text-xs text-neutral-400"><span
+                class="w-1 h-1 rounded-full bg-[#646CFF] flex-shrink-0"></span>Vite</li>
+            <li class="flex items-center gap-1.5 text-[10px] sm:text-xs text-neutral-400"><span
+                class="w-1 h-1 rounded-full bg-[#06B6D4] flex-shrink-0"></span>Tailwind</li>
+            <li class="flex items-center gap-1.5 text-[10px] sm:text-xs text-neutral-400"><span
+                class="w-1 h-1 rounded-full bg-neutral-500 flex-shrink-0"></span>Axios</li>
+          </ul>
+        </div>
+        <div class="p-3 sm:p-4 rounded-2xl bg-neutral-900/50 border border-neutral-800 card-hover">
+          <div class="flex items-center gap-2 mb-3"><span class="iconify text-[#339933] text-lg sm:text-xl"
+              data-icon="logos:nodejs-icon"></span>
+            <h3 class="text-white font-semibold text-xs sm:text-sm">Backend</h3>
+          </div>
+          <ul class="space-y-1.5">
+            <li class="flex items-center gap-1.5 text-[10px] sm:text-xs text-neutral-400"><span
+                class="w-1 h-1 rounded-full bg-[#339933] flex-shrink-0"></span>Node.js</li>
+            <li class="flex items-center gap-1.5 text-[10px] sm:text-xs text-neutral-400"><span
+                class="w-1 h-1 rounded-full bg-neutral-400 flex-shrink-0"></span>Express</li>
+            <li class="flex items-center gap-1.5 text-[10px] sm:text-xs text-neutral-400"><span
+                class="w-1 h-1 rounded-full bg-neutral-600 flex-shrink-0"></span>JWT Auth</li>
+            <li class="flex items-center gap-1.5 text-[10px] sm:text-xs text-neutral-400"><span
+                class="w-1 h-1 rounded-full bg-[#EF4444] flex-shrink-0"></span>Multer</li>
+          </ul>
+        </div>
+        <div class="p-3 sm:p-4 rounded-2xl bg-neutral-900/50 border border-neutral-800 card-hover">
+          <div class="flex items-center gap-2 mb-3"><span class="iconify text-[#EE4C2C] text-lg sm:text-xl"
+              data-icon="logos:pytorch-icon"></span>
+            <h3 class="text-white font-semibold text-xs sm:text-sm">ML / AI</h3>
+          </div>
+          <ul class="space-y-1.5">
+            <li class="flex items-center gap-1.5 text-[10px] sm:text-xs text-neutral-400"><span
+                class="w-1 h-1 rounded-full bg-[#EE4C2C] flex-shrink-0"></span>YOLOv8</li>
+            <li class="flex items-center gap-1.5 text-[10px] sm:text-xs text-neutral-400"><span
+                class="w-1 h-1 rounded-full bg-[#EE4C2C] flex-shrink-0"></span>PyTorch</li>
+            <li class="flex items-center gap-1.5 text-[10px] sm:text-xs text-neutral-400"><span
+                class="w-1 h-1 rounded-full bg-[#009688] flex-shrink-0"></span>FastAPI</li>
+            <li class="flex items-center gap-1.5 text-[10px] sm:text-xs text-neutral-400"><span
+                class="w-1 h-1 rounded-full bg-neutral-500 flex-shrink-0"></span>Ultralytics</li>
+          </ul>
+        </div>
+        <div class="p-3 sm:p-4 rounded-2xl bg-neutral-900/50 border border-neutral-800 card-hover">
+          <div class="flex items-center gap-2 mb-3"><span class="iconify text-[#47A248] text-lg sm:text-xl"
+              data-icon="logos:mongodb-icon"></span>
+            <h3 class="text-white font-semibold text-xs sm:text-sm">Database</h3>
+          </div>
+          <ul class="space-y-1.5">
+            <li class="flex items-center gap-1.5 text-[10px] sm:text-xs text-neutral-400"><span
+                class="w-1 h-1 rounded-full bg-[#47A248] flex-shrink-0"></span>Atlas</li>
+            <li class="flex items-center gap-1.5 text-[10px] sm:text-xs text-neutral-400"><span
+                class="w-1 h-1 rounded-full bg-[#47A248] flex-shrink-0"></span>Mongoose</li>
+            <li class="flex items-center gap-1.5 text-[10px] sm:text-xs text-neutral-400"><span
+                class="w-1 h-1 rounded-full bg-neutral-500 flex-shrink-0"></span>Cloud</li>
+            <li class="flex items-center gap-1.5 text-[10px] sm:text-xs text-neutral-400"><span
+                class="w-1 h-1 rounded-full bg-neutral-500 flex-shrink-0"></span>Free Tier</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 8 — Dataset -->
+  <div class="slide" id="slide-8">
+    <div class="si">
+      <span class="tag bg-neuro-green/10 text-neuro-green border border-neuro-green/20"><span
+          class="iconify text-[10px]" data-icon="lucide:database"></span> Data</span>
+      <h2 class="text-2xl sm:text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight mt-3 mb-2">Dataset</h2>
+      <p class="text-neutral-500 text-xs sm:text-base mb-5 sm:mb-8">Source: <span
+          class="text-white font-medium">Kaggle</span> — 4 Classes</p>
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-2.5 sm:gap-4">
+        <div class="mri-card rounded-xl overflow-hidden border border-neutral-800 bg-neutral-900/50 card-hover">
+          <div class="aspect-square overflow-hidden bg-neutral-900"><img
+              src="https://z-cdn-media.chatglm.cn/files/39f8be48-0f7e-4236-908e-83be8c8cad22.jpg?auth_key=1874792868-d82e556b0c224e8faeb6ee59d767315b-0-7949ec03bf12c4fb29663d3dd626f5e3"
+              alt="Glioma" class="w-full h-full object-cover"></div>
+          <div class="p-2.5 sm:p-3">
+            <div class="flex items-center gap-1.5 mb-0.5"><span
+                class="w-1.5 h-1.5 rounded-full bg-red-400 flex-shrink-0"></span>
+              <h4 class="text-white font-semibold text-[11px] sm:text-sm">Glioma</h4>
+            </div>
+            <p class="text-neutral-600 text-[9px] sm:text-xs">Te-gl_0010</p>
+          </div>
+        </div>
+        <div class="mri-card rounded-xl overflow-hidden border border-neutral-800 bg-neutral-900/50 card-hover">
+          <div class="aspect-square overflow-hidden bg-neutral-900"><img
+              src="https://z-cdn-media.chatglm.cn/files/1161b4d8-3d47-4fca-9745-f0d5fa977fba.jpg?auth_key=1874792868-e0a66de033724d90ab23595a07398a28-0-c6a5204c57b524b6bc3893c45fb6d9d2"
+              alt="Meningioma" class="w-full h-full object-cover"></div>
+          <div class="p-2.5 sm:p-3">
+            <div class="flex items-center gap-1.5 mb-0.5"><span
+                class="w-1.5 h-1.5 rounded-full bg-blue-400 flex-shrink-0"></span>
+              <h4 class="text-white font-semibold text-[11px] sm:text-sm">Meningioma</h4>
+            </div>
+            <p class="text-neutral-600 text-[9px] sm:text-xs">Te-me_0010</p>
+          </div>
+        </div>
+        <div class="mri-card rounded-xl overflow-hidden border border-neutral-800 bg-neutral-900/50 card-hover">
+          <div class="aspect-square overflow-hidden bg-neutral-900"><img
+              src="https://z-cdn-media.chatglm.cn/files/2d590393-c3e4-4b20-9ced-ddf5a13fbab4.jpg?auth_key=1874792868-64e80adb43c24a8fa092fd84d14747cd-0-286e35fcec4ed399b7fa938070031f01"
+              alt="Pituitary" class="w-full h-full object-cover"></div>
+          <div class="p-2.5 sm:p-3">
+            <div class="flex items-center gap-1.5 mb-0.5"><span
+                class="w-1.5 h-1.5 rounded-full bg-purple-400 flex-shrink-0"></span>
+              <h4 class="text-white font-semibold text-[11px] sm:text-sm">Pituitary</h4>
+            </div>
+            <p class="text-neutral-600 text-[9px] sm:text-xs">Te-pi_0010</p>
+          </div>
+        </div>
+        <div class="mri-card rounded-xl overflow-hidden border border-neutral-800 bg-neutral-900/50 card-hover">
+          <div class="aspect-square overflow-hidden bg-neutral-900"><img
+              src="https://z-cdn-media.chatglm.cn/files/3a536b30-f8e8-4a06-ac84-357468703ee9.jpg?auth_key=1874792868-dc5d70efa0fb4085bce31b8dc98aeb7e-0-0d9dbf02dd66f0cb5fa4f1cf0c90a1e0"
+              alt="No Tumor" class="w-full h-full object-cover"></div>
+          <div class="p-2.5 sm:p-3">
+            <div class="flex items-center gap-1.5 mb-0.5"><span
+                class="w-1.5 h-1.5 rounded-full bg-green-400 flex-shrink-0"></span>
+              <h4 class="text-white font-semibold text-[11px] sm:text-sm">No Tumor</h4>
+            </div>
+            <p class="text-neutral-600 text-[9px] sm:text-xs">Te-no_0147</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 9 — Dataset Structure -->
+  <div class="slide" id="slide-9">
+    <div class="si">
+      <span class="tag bg-neuro-amber/10 text-neuro-amber border border-neuro-amber/20"><span
+          class="iconify text-[10px]" data-icon="lucide:folder-tree"></span> Structure</span>
+      <h2 class="text-2xl sm:text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight mt-3 mb-6 sm:mb-8">Dataset
+        Structure</h2>
+      <div class="grid sm:grid-cols-2 gap-3 sm:gap-6">
+        <div
+          class="p-3 sm:p-4 rounded-2xl bg-neutral-900 border border-neutral-800 font-mono text-[10px] sm:text-xs overflow-hidden">
+          <div class="flex items-center gap-1.5 mb-3 pb-2 border-b border-neutral-800">
+            <div class="w-2 h-2 rounded-full bg-neuro-red"></div>
+            <div class="w-2 h-2 rounded-full bg-neuro-amber"></div>
+            <div class="w-2 h-2 rounded-full bg-neuro-green"></div><span
+              class="text-neutral-600 text-[9px] sm:text-xs ml-1">dataset/</span>
+          </div>
+          <div class="space-y-1">
+            <p class="text-neuro-amber"><span class="iconify inline text-[10px]" data-icon="lucide:folder"></span>
+              dataset/</p>
+            <p class="text-neutral-400 pl-3"><span class="iconify inline text-[10px] text-neuro-blue"
+                data-icon="lucide:folder"></span> train/</p>
+            <p class="text-neutral-600 pl-6"><span class="iconify inline text-[10px] text-red-400"
+                data-icon="lucide:folder"></span> glioma/</p>
+            <p class="text-neutral-600 pl-6"><span class="iconify inline text-[10px] text-blue-400"
+                data-icon="lucide:folder"></span> meningioma/</p>
+            <p class="text-neutral-600 pl-6"><span class="iconify inline text-[10px] text-purple-400"
+                data-icon="lucide:folder"></span> pituitary/</p>
+            <p class="text-neutral-600 pl-6"><span class="iconify inline text-[10px] text-green-400"
+                data-icon="lucide:folder"></span> no_tumor/</p>
+            <p class="text-neutral-400 pl-3"><span class="iconify inline text-[10px] text-neuro-cyan"
+                data-icon="lucide:folder"></span> validation/</p>
+            <p class="text-neutral-600 pl-6">... (same 4 classes)</p>
+            <p class="text-neutral-400 pl-3"><span class="iconify inline text-[10px] text-neuro-green"
+                data-icon="lucide:folder"></span> test/</p>
+            <p class="text-neutral-600 pl-6">... (same 4 classes)</p>
+          </div>
+        </div>
+        <div class="space-y-2.5 sm:space-y-3">
+          <div class="p-3 sm:p-4 rounded-xl bg-neuro-blue/5 border border-neuro-blue/20">
+            <div class="flex items-center gap-2 mb-1"><span class="iconify text-neuro-blue text-sm"
+                data-icon="lucide:graduation-cap"></span>
+              <h4 class="text-white font-semibold text-xs sm:text-sm">Train Set — 70%</h4>
+            </div>
+            <p class="text-neutral-400 text-[10px] sm:text-xs">Model learns patterns from this data</p>
+          </div>
+          <div class="p-3 sm:p-4 rounded-xl bg-neuro-cyan/5 border border-neuro-cyan/20">
+            <div class="flex items-center gap-2 mb-1"><span class="iconify text-neuro-cyan text-sm"
+                data-icon="lucide:sliders"></span>
+              <h4 class="text-white font-semibold text-xs sm:text-sm">Validation — 15%</h4>
+            </div>
+            <p class="text-neutral-400 text-[10px] sm:text-xs">Tune hyperparameters</p>
+          </div>
+          <div class="p-3 sm:p-4 rounded-xl bg-neuro-green/5 border border-neuro-green/20">
+            <div class="flex items-center gap-2 mb-1"><span class="iconify text-neuro-green text-sm"
+                data-icon="lucide:check-square"></span>
+              <h4 class="text-white font-semibold text-xs sm:text-sm">Test Set — 15%</h4>
+            </div>
+            <p class="text-neutral-400 text-[10px] sm:text-xs">Final evaluation on unseen data</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 10 — Preprocessing -->
+  <div class="slide" id="slide-10">
+    <div class="si">
+      <span class="tag bg-neuro-cyan/10 text-neuro-cyan border border-neuro-cyan/20"><span class="iconify text-[10px]"
+          data-icon="lucide:settings-2"></span> Prep</span>
+      <h2 class="text-2xl sm:text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight mt-3 mb-6 sm:mb-8">Data
+        Preprocessing</h2>
+      <div class="grid sm:grid-cols-2 gap-5 sm:gap-8 items-center">
+        <div class="space-y-2.5">
+          <div class="flex items-start gap-2.5 p-3 rounded-xl bg-neutral-900/50 border border-neutral-800">
+            <div class="w-7 h-7 rounded-lg bg-neuro-blue/10 flex items-center justify-center flex-shrink-0"><span
+                class="text-neuro-blue text-[10px] font-bold">1</span></div>
+            <div>
+              <p class="text-white font-medium text-xs mb-0.5">Image Resizing</p>
+              <p class="text-neutral-500 text-[10px]">All to <span class="text-neuro-blue font-mono">224×224</span>
+                pixels</p>
+            </div>
+          </div>
+          <div class="flex items-start gap-2.5 p-3 rounded-xl bg-neutral-900/50 border border-neutral-800">
+            <div class="w-7 h-7 rounded-lg bg-neuro-cyan/10 flex items-center justify-center flex-shrink-0"><span
+                class="text-neuro-cyan text-[10px] font-bold">2</span></div>
+            <div>
+              <p class="text-white font-medium text-xs mb-0.5">Data Splitting</p>
+              <p class="text-neutral-500 text-[10px]">70-15-15 split</p>
+            </div>
+          </div>
+          <div class="flex items-start gap-2.5 p-3 rounded-xl bg-neutral-900/50 border border-neutral-800">
+            <div class="w-7 h-7 rounded-lg bg-neuro-purple/10 flex items-center justify-center flex-shrink-0"><span
+                class="text-neuro-purple text-[10px] font-bold">3</span></div>
+            <div>
+              <p class="text-white font-medium text-xs mb-0.5">Class Organization</p>
+              <p class="text-neutral-500 text-[10px]">4 class folders for YOLO</p>
+            </div>
+          </div>
+          <div class="flex items-start gap-2.5 p-3 rounded-xl bg-neutral-900/50 border border-neutral-800">
+            <div class="w-7 h-7 rounded-lg bg-neuro-green/10 flex items-center justify-center flex-shrink-0"><span
+                class="text-neuro-green text-[10px] font-bold">4</span></div>
+            <div>
+              <p class="text-white font-medium text-xs mb-0.5">Auto Normalization</p>
+              <p class="text-neutral-500 text-[10px]">Handled by YOLO pipeline</p>
+            </div>
+          </div>
+        </div>
+        <div class="flex items-center justify-center">
+          <div class="relative">
+            <div
+              class="w-32 h-32 sm:w-40 sm:h-40 rounded-2xl border-2 border-dashed border-neutral-700 flex items-center justify-center">
+              <div class="text-center"><span class="iconify text-neutral-600 text-3xl sm:text-4xl"
+                  data-icon="lucide:image"></span>
+                <p class="text-neutral-600 text-[10px] mt-1">Original</p>
+              </div>
+            </div>
+            <div class="absolute top-1/2 left-1/2 translate-x-2 translate-y-2"><span
+                class="iconify text-neuro-blue text-lg sm:text-xl" data-icon="lucide:arrow-right"></span></div>
+            <div class="absolute top-1/2 left-1/2 translate-x-16 sm:translate-x-24 -translate-y-1/2">
+              <div
+                class="w-20 h-20 sm:w-24 sm:h-24 rounded-xl border-2 border-neuro-blue/50 bg-neuro-blue/5 flex items-center justify-center glow-blue">
+                <div class="text-center"><span class="iconify text-neuro-blue text-lg sm:text-xl"
+                    data-icon="lucide:image-check"></span>
+                  <p class="text-neuro-blue text-[10px] mt-0.5 font-medium">224×224</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 11 — Model -->
+  <div class="slide" id="slide-11">
+    <div class="si">
+      <div
+        class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[350px] h-[350px] sm:w-[500px] sm:h-[500px] rounded-full bg-neuro-purple/5 blur-[90px] sm:blur-[120px] pointer-events-none">
+      </div>
+      <div class="relative z-10">
+        <span class="tag bg-neuro-purple/10 text-neuro-purple border border-neuro-purple/20"><span
+            class="iconify text-[10px]" data-icon="lucide:cpu"></span> Model</span>
+        <h2 class="text-2xl sm:text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight mt-3 mb-6 sm:mb-8">Model: <span
+            class="gradient-text">YOLOv8</span></h2>
+        <div class="grid sm:grid-cols-2 gap-5 sm:gap-8 items-center">
+          <div>
+            <div class="p-4 sm:p-6 rounded-2xl border border-neuro-purple/20 bg-neuro-purple/5 glow-purple mb-4">
+              <div class="flex items-center gap-3 mb-3">
+                <div class="w-11 h-11 sm:w-12 sm:h-12 rounded-2xl bg-neuro-purple/20 flex items-center justify-center">
+                  <span class="iconify text-neuro-purple text-lg sm:text-xl" data-icon="lucide:zap"></span>
+                </div>
+                <div>
+                  <p class="text-white text-base sm:text-xl font-bold">YOLOv8-cls</p>
+                  <p class="text-neuro-purple/60 text-[10px] sm:text-sm">Classification Variant</p>
+                </div>
+              </div>
+              <p class="text-neutral-400 text-xs sm:text-sm leading-relaxed">State-of-the-art framework adapted for
+                image classification.</p>
+            </div>
+            <div class="grid grid-cols-3 gap-2">
+              <div class="text-center p-2.5 sm:p-3 rounded-xl bg-neutral-900/50 border border-neutral-800"><span
+                  class="iconify text-neuro-blue text-base sm:text-lg mb-1" data-icon="lucide:image"></span>
+                <p class="text-white text-[9px] sm:text-xs font-medium">Pretrained</p>
+                <p class="text-neutral-600 text-[8px] sm:text-[10px]">ImageNet</p>
+              </div>
+              <div class="text-center p-2.5 sm:p-3 rounded-xl bg-neutral-900/50 border border-neutral-800"><span
+                  class="iconify text-neuro-green text-base sm:text-lg mb-1" data-icon="lucide:tune"></span>
+                <p class="text-white text-[9px] sm:text-xs font-medium">Fine-tuned</p>
+                <p class="text-neutral-600 text-[8px] sm:text-[10px]">MRI</p>
+              </div>
+              <div class="text-center p-2.5 sm:p-3 rounded-xl bg-neutral-900/50 border border-neutral-800"><span
+                  class="iconify text-neuro-amber text-base sm:text-lg mb-1" data-icon="lucide:rocket"></span>
+                <p class="text-white text-[9px] sm:text-xs font-medium">Lightweight</p>
+                <p class="text-neutral-600 text-[8px] sm:text-[10px]">Fast</p>
+              </div>
+            </div>
+          </div>
+          <div class="flex items-center justify-center">
+            <div class="float"><svg width="200" height="180" viewBox="0 0 300 280" fill="none" class="opacity-80">
+                <circle cx="40" cy="60" r="12" fill="#3b82f6" opacity=".3" stroke="#3b82f6" stroke-width="1" />
+                <circle cx="40" cy="100" r="12" fill="#3b82f6" opacity=".3" stroke="#3b82f6" stroke-width="1" />
+                <circle cx="40" cy="140" r="12" fill="#3b82f6" opacity=".3" stroke="#3b82f6" stroke-width="1" />
+                <circle cx="40" cy="180" r="12" fill="#3b82f6" opacity=".3" stroke="#3b82f6" stroke-width="1" />
+                <circle cx="40" cy="220" r="12" fill="#3b82f6" opacity=".3" stroke="#3b82f6" stroke-width="1" />
+                <circle cx="120" cy="50" r="14" fill="#8b5cf6" opacity=".3" stroke="#8b5cf6" stroke-width="1" />
+                <circle cx="120" cy="90" r="14" fill="#8b5cf6" opacity=".3" stroke="#8b5cf6" stroke-width="1" />
+                <circle cx="120" cy="130" r="14" fill="#8b5cf6" opacity=".3" stroke="#8b5cf6" stroke-width="1" />
+                <circle cx="120" cy="170" r="14" fill="#8b5cf6" opacity=".3" stroke="#8b5cf6" stroke-width="1" />
+                <circle cx="120" cy="210" r="14" fill="#8b5cf6" opacity=".3" stroke="#8b5cf6" stroke-width="1" />
+                <circle cx="120" cy="250" r="14" fill="#8b5cf6" opacity=".3" stroke="#8b5cf6" stroke-width="1" />
+                <circle cx="200" cy="70" r="14" fill="#06b6d4" opacity=".3" stroke="#06b6d4" stroke-width="1" />
+                <circle cx="200" cy="120" r="14" fill="#06b6d4" opacity=".3" stroke="#06b6d4" stroke-width="1" />
+                <circle cx="200" cy="170" r="14" fill="#06b6d4" opacity=".3" stroke="#06b6d4" stroke-width="1" />
+                <circle cx="200" cy="220" r="14" fill="#06b6d4" opacity=".3" stroke="#06b6d4" stroke-width="1" />
+                <circle cx="270" cy="80" r="10" fill="#22c55e" opacity=".4" stroke="#22c55e" stroke-width="1.5" />
+                <circle cx="270" cy="130" r="10" fill="#22c55e" opacity=".4" stroke="#22c55e" stroke-width="1.5" />
+                <circle cx="270" cy="180" r="10" fill="#22c55e" opacity=".4" stroke="#22c55e" stroke-width="1.5" />
+                <circle cx="270" cy="230" r="10" fill="#22c55e" opacity=".4" stroke="#22c55e" stroke-width="1.5" />
+              </svg>
+              <div class="flex justify-between px-1 mt-0.5"><span
+                  class="text-[8px] sm:text-[10px] text-neuro-blue/60">Input</span><span
+                  class="text-[8px] sm:text-[10px] text-neuro-green/60">Output</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 12 — Training -->
+  <div class="slide" id="slide-12">
+    <div class="si">
+      <span class="tag bg-neuro-green/10 text-neuro-green border border-neuro-green/20"><span
+          class="iconify text-[10px]" data-icon="lucide:play-circle"></span> Training</span>
+      <h2 class="text-2xl sm:text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight mt-3 mb-6 sm:mb-8">Training
+        Process</h2>
+      <div class="grid sm:grid-cols-2 gap-3 sm:gap-6">
+        <div class="p-3 sm:p-4 rounded-2xl bg-neutral-900 border border-neutral-800">
+          <div class="flex items-center gap-1.5 mb-3 pb-2 border-b border-neutral-800">
+            <div class="w-2 h-2 rounded-full bg-neuro-red"></div>
+            <div class="w-2 h-2 rounded-full bg-neuro-amber"></div>
+            <div class="w-2 h-2 rounded-full bg-neuro-green"></div><span
+              class="text-neutral-600 text-[9px] sm:text-xs ml-1">Colab</span><span
+              class="tag bg-neuro-amber/20 text-neuro-amber text-[8px] ml-auto">GPU T4</span>
+          </div>
+          <div class="font-mono text-[9px] sm:text-xs space-y-1">
+            <p><span class="text-neuro-green">from</span> <span class="text-neuro-cyan">ultralytics</span> <span
+                class="text-neuro-green">import</span> YOLO</p>
+            <p>model = YOLO(<span class="text-neuro-amber">'yolov8n-cls.pt'</span>)</p>
+            <p>results = model.train(</p>
+            <p class="pl-3">data=<span class="text-neuro-amber">'./dataset'</span>,</p>
+            <p class="pl-3">epochs=<span class="text-neuro-blue">30</span>, imgsz=<span
+                class="text-neuro-blue">224</span>,</p>
+            <p class="pl-3">batch=<span class="text-neuro-blue">32</span>)</p>
+            <p class="text-neuro-green pulse-dot mt-1">● Training complete ✓</p>
+          </div>
+        </div>
+        <div class="space-y-3">
+          <div class="p-3 sm:p-4 rounded-xl bg-neutral-900/50 border border-neutral-800">
+            <div class="flex justify-between mb-1.5"><span
+                class="text-neutral-400 text-[10px] sm:text-xs">Platform</span><span
+                class="text-white text-[10px] sm:text-xs font-medium">Google Colab</span></div>
+            <div class="flex justify-between"><span class="text-neutral-400 text-[10px] sm:text-xs">GPU</span><span
+                class="tag bg-neuro-green/10 text-neuro-green text-[8px] sm:text-[9px]">Tesla T4</span></div>
+          </div>
+          <div class="p-3 sm:p-4 rounded-xl bg-neutral-900/50 border border-neutral-800">
+            <p class="text-neutral-400 text-[10px] sm:text-xs mb-2">Configuration</p>
+            <div class="space-y-2">
+              <div>
+                <div class="flex justify-between text-[9px] sm:text-xs mb-0.5"><span
+                    class="text-neutral-500">Epochs</span><span>30</span></div>
+                <div class="w-full h-1 rounded-full bg-neutral-800">
+                  <div class="h-full rounded-full bg-neuro-blue" style="width:100%"></div>
+                </div>
+              </div>
+              <div>
+                <div class="flex justify-between text-[9px] sm:text-xs mb-0.5"><span class="text-neutral-500">Image
+                    Size</span><span>224×224</span></div>
+                <div class="w-full h-1 rounded-full bg-neutral-800">
+                  <div class="h-full rounded-full bg-neuro-cyan" style="width:100%"></div>
+                </div>
+              </div>
+              <div>
+                <div class="flex justify-between text-[9px] sm:text-xs mb-0.5"><span class="text-neutral-500">Batch
+                    Size</span><span>32</span></div>
+                <div class="w-full h-1 rounded-full bg-neutral-800">
+                  <div class="h-full rounded-full bg-neuro-purple" style="width:100%"></div>
+                </div>
+              </div>
+              <div>
+                <div class="flex justify-between text-[9px] sm:text-xs mb-0.5"><span
+                    class="text-neutral-500">Optimizer</span><span>Auto</span></div>
+                <div class="w-full h-1 rounded-full bg-neutral-800">
+                  <div class="h-full rounded-full bg-neuro-green" style="width:100%"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 13 — Model Arch -->
+  <div class="slide" id="slide-13">
+    <div class="si">
+      <span class="tag bg-neuro-blue/10 text-neuro-blue border border-neuro-blue/20"><span class="iconify text-[10px]"
+          data-icon="lucide:network"></span> Pipeline</span>
+      <h2 class="text-2xl sm:text-4xl md:text-5xl font-bold tracking-tight mt-3 mb-6 sm:mb-8">Model Architecture</h2>
+      <div class="flex flex-wrap items-center justify-center gap-2">
+        <div class="p-2.5 sm:p-3 rounded-xl bg-neutral-900/50 border border-neutral-800 text-center card-hover">
+          <div class="w-8 h-8 rounded-lg bg-neuro-blue/10 flex items-center justify-center mx-auto mb-1"><span
+              class="iconify text-neuro-blue text-sm" data-icon="lucide:image"></span></div>
+          <p class="text-white font-semibold text-[10px] sm:text-xs">Input</p>
+          <p class="text-neutral-600 text-[8px] sm:text-[9px]">224×224×3</p>
+        </div>
+        <span class="iconify text-neutral-700 text-sm hidden sm:block" data-icon="lucide:chevron-right"></span>
+        <div class="p-2.5 sm:p-3 rounded-xl bg-neuro-blue/5 border border-neuro-blue/20 text-center card-hover">
+          <div class="w-8 h-8 rounded-lg bg-neuro-blue/10 flex items-center justify-center mx-auto mb-1"><span
+              class="iconify text-neuro-blue text-sm" data-icon="lucide:grid-3x3"></span></div>
+          <p class="text-white font-semibold text-[10px] sm:text-xs">CNN Layers</p>
+          <p class="text-neuro-blue/60 text-[8px] sm:text-[9px]">Conv+Pool</p>
+        </div>
+        <span class="iconify text-neutral-700 text-sm hidden sm:block" data-icon="lucide:chevron-right"></span>
+        <div class="p-2.5 sm:p-3 rounded-xl bg-neuro-purple/5 border border-neuro-purple/20 text-center card-hover">
+          <div class="w-8 h-8 rounded-lg bg-neuro-purple/10 flex items-center justify-center mx-auto mb-1"><span
+              class="iconify text-neuro-purple text-sm" data-icon="lucide:extract"></span></div>
+          <p class="text-white font-semibold text-[10px] sm:text-xs">Features</p>
+          <p class="text-neuro-purple/60 text-[8px] sm:text-[9px]">Extraction</p>
+        </div>
+        <span class="iconify text-neutral-700 text-sm hidden sm:block" data-icon="lucide:chevron-right"></span>
+        <div class="p-2.5 sm:p-3 rounded-xl bg-neuro-cyan/5 border border-neuro-cyan/20 text-center card-hover">
+          <div class="w-8 h-8 rounded-lg bg-neuro-cyan/10 flex items-center justify-center mx-auto mb-1"><span
+              class="iconify text-neuro-cyan text-sm" data-icon="lucide:git-merge"></span></div>
+          <p class="text-white font-semibold text-[10px] sm:text-xs">Dense</p>
+          <p class="text-neuro-cyan/60 text-[8px] sm:text-[9px]">Connected</p>
+        </div>
+        <span class="iconify text-neutral-700 text-sm hidden sm:block" data-icon="lucide:chevron-right"></span>
+        <div class="p-2.5 sm:p-3 rounded-xl bg-neuro-amber/5 border border-neuro-amber/20 text-center card-hover">
+          <div class="w-8 h-8 rounded-lg bg-neuro-amber/10 flex items-center justify-center mx-auto mb-1"><span
+              class="iconify text-neuro-amber text-sm" data-icon="lucide:bar-chart-3"></span></div>
+          <p class="text-white font-semibold text-[10px] sm:text-xs">Softmax</p>
+          <p class="text-neuro-amber/60 text-[8px] sm:text-[9px]">Probs</p>
+        </div>
+        <span class="iconify text-neutral-700 text-sm hidden sm:block" data-icon="lucide:chevron-right"></span>
+        <div
+          class="p-2.5 sm:p-3 rounded-xl bg-neuro-green/5 border border-neuro-green/20 text-center card-hover glow-cyan">
+          <div class="w-8 h-8 rounded-lg bg-neuro-green/10 flex items-center justify-center mx-auto mb-1"><span
+              class="iconify text-neuro-green text-sm" data-icon="lucide:check-circle-2"></span></div>
+          <p class="text-white font-semibold text-[10px] sm:text-xs">Output</p>
+          <p class="text-neuro-green/60 text-[8px] sm:text-[9px]">Class</p>
+        </div>
+      </div>
+      <div class="mt-5 max-w-lg mx-auto p-3 rounded-xl border border-neutral-800 bg-neutral-900/30">
+        <p class="text-neutral-400 text-[10px] sm:text-xs text-center">CNN backbone extracts features → dense layers →
+          softmax → class probabilities</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 14 — Results + NEW SCREENSHOT -->
+  <div class="slide" id="slide-14">
+    <div class="si">
+      <div
+        class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[350px] h-[350px] sm:w-[500px] sm:h-[500px] rounded-full bg-neuro-green/5 blur-[90px] sm:blur-[120px] pointer-events-none">
+      </div>
+      <div class="relative z-10">
+        <span class="tag bg-neuro-green/10 text-neuro-green border border-neuro-green/20"><span
+            class="iconify text-[10px]" data-icon="lucide:bar-chart-2"></span> Results</span>
+        <h2 class="text-2xl sm:text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight mt-3 mb-6 sm:mb-8">Model
+          Results</h2>
+
+        <!-- Accuracy + bars -->
+        <div class="grid sm:grid-cols-2 gap-4 sm:gap-6 items-center mb-5 sm:mb-6">
+          <div class="flex items-center justify-center">
+            <div class="relative"><svg width="130" height="130" viewBox="0 0 200 200" class="transform -rotate-90">
+                <circle cx="100" cy="100" r="85" fill="none" stroke="#262626" stroke-width="10" />
+                <circle cx="100" cy="100" r="85" fill="none" stroke="#22c55e" stroke-width="10" stroke-dasharray="534"
+                  stroke-dashoffset="43" stroke-linecap="round" />
+              </svg>
+              <div class="absolute inset-0 flex flex-col items-center justify-center"><span
+                  class="text-3xl sm:text-4xl font-bold text-white">92%</span><span
+                  class="text-neutral-500 text-[10px] sm:text-xs">Accuracy</span></div>
+            </div>
+          </div>
+          <div class="space-y-2">
+            <p class="text-neutral-400 text-[10px] sm:text-xs mb-2">Sample Output:</p>
+            <div class="p-3 sm:p-4 rounded-xl border border-neuro-green/20 bg-neuro-green/5">
+              <div class="flex items-center gap-2 mb-2">
+                <div class="w-7 h-7 rounded-lg bg-neuro-green/20 flex items-center justify-center"><span
+                    class="iconify text-neuro-green text-xs" data-icon="lucide:check-circle-2"></span></div>
+                <div>
+                  <p class="text-white font-semibold text-[10px] sm:text-xs">Glioma</p>
+                  <p class="text-neuro-green text-[9px]">Predicted</p>
+                </div>
+              </div>
+              <div class="space-y-1.5">
+                <div>
+                  <div class="flex justify-between text-[9px] sm:text-xs mb-0.5"><span
+                      class="text-neutral-400">Glioma</span><span class="text-neuro-green font-medium">94.2%</span>
+                  </div>
+                  <div class="w-full h-1 rounded-full bg-neutral-800">
+                    <div class="h-full rounded-full bg-neuro-green" style="width:94.2%"></div>
+                  </div>
+                </div>
+                <div>
+                  <div class="flex justify-between text-[9px] sm:text-xs mb-0.5"><span
+                      class="text-neutral-400">Meningioma</span><span class="text-neutral-500">3.1%</span></div>
+                  <div class="w-full h-1 rounded-full bg-neutral-800">
+                    <div class="h-full rounded-full bg-neutral-600" style="width:3.1%"></div>
+                  </div>
+                </div>
+                <div>
+                  <div class="flex justify-between text-[9px] sm:text-xs mb-0.5"><span
+                      class="text-neutral-400">Pituitary</span><span class="text-neutral-500">1.8%</span></div>
+                  <div class="w-full h-1 rounded-full bg-neutral-800">
+                    <div class="h-full rounded-full bg-neutral-600" style="width:1.8%"></div>
+                  </div>
+                </div>
+                <div>
+                  <div class="flex justify-between text-[9px] sm:text-xs mb-0.5"><span class="text-neutral-400">No
+                      Tumor</span><span class="text-neutral-500">0.9%</span></div>
+                  <div class="w-full h-1 rounded-full bg-neutral-800">
+                    <div class="h-full rounded-full bg-neutral-600" style="width:0.9%"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- NEW: Prediction Result Screenshot -->
+        <div class="mb-3">
+          <p class="text-neutral-500 text-[10px] sm:text-xs mb-2 sm:mb-3 flex items-center gap-1.5"><span
+              class="iconify text-neuro-blue" data-icon="lucide:monitor"></span>Live Prediction Output</p>
+          <div class="screenshot-frame"><img
+              src="https://z-cdn-media.chatglm.cn/files/5de70569-59a2-4b6b-9058-5aacc3c61ab5.png?auth_key=1874795617-d943c460da9046b98e36c2219b36cdcb-0-a87ee9ef18f57ef5e20b4dbfdfea3178"
+              alt="NeuroScan AI Prediction Result - Glioma Tumor 100% Confidence" loading="lazy"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 15 — Workflow -->
+  <div class="slide" id="slide-15">
+    <div class="si">
+      <span class="tag bg-neuro-blue/10 text-neuro-blue border border-neuro-blue/20"><span class="iconify text-[10px]"
+          data-icon="lucide:workflow"></span> Flow</span>
+      <h2 class="text-2xl sm:text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight mt-3 mb-6 sm:mb-8">Prediction
+        Workflow</h2>
+      <div class="flex flex-col items-center gap-2">
+        <div class="flex flex-col sm:flex-row items-center gap-2 w-full max-w-4xl">
+          <div
+            class="flex-1 w-full p-2.5 rounded-xl bg-neutral-900/50 border border-neutral-800 flex items-center gap-2 card-hover">
+            <div class="w-6 h-6 rounded bg-neuro-blue/10 flex items-center justify-center flex-shrink-0"><span
+                class="text-neuro-blue text-[9px] font-bold">1</span></div>
+            <div>
+              <p class="text-white font-medium text-[10px] sm:text-xs">Upload MRI</p>
+              <p class="text-neutral-600 text-[9px]">User uploads</p>
+            </div>
+          </div>
+          <span class="iconify text-neutral-700 rotate-90 sm:rotate-0 text-sm" data-icon="lucide:chevron-right"></span>
+          <div
+            class="flex-1 w-full p-2.5 rounded-xl bg-neutral-900/50 border border-neutral-800 flex items-center gap-2 card-hover">
+            <div class="w-6 h-6 rounded bg-neuro-green/10 flex items-center justify-center flex-shrink-0"><span
+                class="text-neuro-green text-[9px] font-bold">2</span></div>
+            <div>
+              <p class="text-white font-medium text-[10px] sm:text-xs">Backend Receives</p>
+              <p class="text-neutral-600 text-[9px]">Node.js stores</p>
+            </div>
+          </div>
+          <span class="iconify text-neutral-700 rotate-90 sm:rotate-0 text-sm" data-icon="lucide:chevron-right"></span>
+          <div
+            class="flex-1 w-full p-2.5 rounded-xl bg-neutral-900/50 border border-neutral-800 flex items-center gap-2 card-hover">
+            <div class="w-6 h-6 rounded bg-neuro-purple/10 flex items-center justify-center flex-shrink-0"><span
+                class="text-neuro-purple text-[9px] font-bold">3</span></div>
+            <div>
+              <p class="text-white font-medium text-[10px] sm:text-xs">ML API Call</p>
+              <p class="text-neutral-600 text-[9px]">FastAPI</p>
+            </div>
+          </div>
+        </div>
+        <div class="w-0.5 h-3 bg-neutral-800"></div>
+        <div class="flex flex-col sm:flex-row items-center gap-2 w-full max-w-4xl">
+          <div
+            class="flex-1 w-full p-2.5 rounded-xl bg-neuro-purple/5 border border-neuro-purple/20 flex items-center gap-2 card-hover">
+            <div class="w-6 h-6 rounded bg-neuro-purple/10 flex items-center justify-center flex-shrink-0"><span
+                class="text-neuro-purple text-[9px] font-bold">4</span></div>
+            <div>
+              <p class="text-white font-medium text-[10px] sm:text-xs">Model Predicts</p>
+              <p class="text-neuro-purple/60 text-[9px]">YOLOv8</p>
+            </div>
+          </div>
+          <span class="iconify text-neutral-700 rotate-90 sm:rotate-0 text-sm" data-icon="lucide:chevron-right"></span>
+          <div
+            class="flex-1 w-full p-2.5 rounded-xl bg-neuro-amber/5 border border-neuro-amber/20 flex items-center gap-2 card-hover">
+            <div class="w-6 h-6 rounded bg-neuro-amber/10 flex items-center justify-center flex-shrink-0"><span
+                class="text-neuro-amber text-[9px] font-bold">5</span></div>
+            <div>
+              <p class="text-white font-medium text-[10px] sm:text-xs">Store in DB</p>
+              <p class="text-neuro-amber/60 text-[9px]">MongoDB</p>
+            </div>
+          </div>
+          <span class="iconify text-neutral-700 rotate-90 sm:rotate-0 text-sm" data-icon="lucide:chevron-right"></span>
+          <div
+            class="flex-1 w-full p-2.5 rounded-xl bg-neuro-green/5 border border-neuro-green/20 flex items-center gap-2 card-hover glow-cyan">
+            <div class="w-6 h-6 rounded bg-neuro-green/10 flex items-center justify-center flex-shrink-0"><span
+                class="text-neuro-green text-[9px] font-bold">6</span></div>
+            <div>
+              <p class="text-white font-medium text-[10px] sm:text-xs">Display Result</p>
+              <p class="text-neuro-green/60 text-[9px]">User sees</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 16 — Features -->
+  <div class="slide" id="slide-16">
+    <div class="si">
+      <span class="tag bg-neuro-cyan/10 text-neuro-cyan border border-neuro-cyan/20"><span class="iconify text-[10px]"
+          data-icon="lucide:layout-grid"></span> Features</span>
+      <h2 class="text-2xl sm:text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight mt-3 mb-6 sm:mb-8">Key Features
+      </h2>
+      <div class="grid grid-cols-2 sm:grid-cols-3 gap-2.5 sm:gap-4">
+        <div
+          class="flex items-start gap-2 p-2.5 sm:p-4 rounded-xl bg-neutral-900/50 border border-neutral-800 card-hover">
+          <div class="w-8 h-8 sm:w-9 sm:h-9 rounded-lg bg-neuro-blue/10 flex items-center justify-center flex-shrink-0">
+            <span class="iconify text-neuro-blue text-sm" data-icon="lucide:shield-check"></span>
+          </div>
+          <div>
+            <p class="text-white font-semibold text-[10px] sm:text-xs mb-0.5">Authentication</p>
+            <p class="text-neutral-500 text-[9px] sm:text-[10px]">JWT secure login</p>
+          </div>
+        </div>
+        <div
+          class="flex items-start gap-2 p-2.5 sm:p-4 rounded-xl bg-neutral-900/50 border border-neutral-800 card-hover">
+          <div
+            class="w-8 h-8 sm:w-9 sm:h-9 rounded-lg bg-neuro-green/10 flex items-center justify-center flex-shrink-0">
+            <span class="iconify text-neuro-green text-sm" data-icon="lucide:upload-cloud"></span>
+          </div>
+          <div>
+            <p class="text-white font-semibold text-[10px] sm:text-xs mb-0.5">MRI Upload</p>
+            <p class="text-neutral-500 text-[9px] sm:text-[10px]">Drag & drop</p>
+          </div>
+        </div>
+        <div
+          class="flex items-start gap-2 p-2.5 sm:p-4 rounded-xl bg-neutral-900/50 border border-neutral-800 card-hover">
+          <div
+            class="w-8 h-8 sm:w-9 sm:h-9 rounded-lg bg-neuro-purple/10 flex items-center justify-center flex-shrink-0">
+            <span class="iconify text-neuro-purple text-sm" data-icon="lucide:brain"></span>
+          </div>
+          <div>
+            <p class="text-white font-semibold text-[10px] sm:text-xs mb-0.5">AI Prediction</p>
+            <p class="text-neutral-500 text-[9px] sm:text-[10px]">Real-time</p>
+          </div>
+        </div>
+        <div
+          class="flex items-start gap-2 p-2.5 sm:p-4 rounded-xl bg-neutral-900/50 border border-neutral-800 card-hover">
+          <div
+            class="w-8 h-8 sm:w-9 sm:h-9 rounded-lg bg-neuro-amber/10 flex items-center justify-center flex-shrink-0">
+            <span class="iconify text-neuro-amber text-sm" data-icon="lucide:history"></span>
+          </div>
+          <div>
+            <p class="text-white font-semibold text-[10px] sm:text-xs mb-0.5">History</p>
+            <p class="text-neutral-500 text-[9px] sm:text-[10px]">Analysis log</p>
+          </div>
+        </div>
+        <div
+          class="flex items-start gap-2 p-2.5 sm:p-4 rounded-xl bg-neutral-900/50 border border-neutral-800 card-hover">
+          <div class="w-8 h-8 sm:w-9 sm:h-9 rounded-lg bg-neuro-red/10 flex items-center justify-center flex-shrink-0">
+            <span class="iconify text-neuro-red text-sm" data-icon="lucide:file-text"></span>
+          </div>
+          <div>
+            <p class="text-white font-semibold text-[10px] sm:text-xs mb-0.5">PDF Report</p>
+            <p class="text-neutral-500 text-[9px] sm:text-[10px]">Downloadable</p>
+          </div>
+        </div>
+        <div class="rounded-xl overflow-hidden border border-neutral-800 card-hover col-span-2 sm:col-span-1"><img
+            src="https://z-cdn-media.chatglm.cn/files/84aab6f0-17b0-46fc-8445-dfa1857ccf89.png?auth_key=1874791396-f8b005dc22cd4a709c7d12d60331056a-0-26377e37df989f8a36dbe1d198dc72b3"
+            alt="Upload Interface" class="w-full h-full object-cover" loading="lazy"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 17 — Deployment -->
+  <div class="slide" id="slide-17">
+    <div class="si">
+      <span class="tag bg-neuro-cyan/10 text-neuro-cyan border border-neuro-cyan/20"><span class="iconify text-[10px]"
+          data-icon="lucide:cloud"></span> Deploy</span>
+      <h2 class="text-2xl sm:text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight mt-3 mb-6 sm:mb-8">Deployment
+      </h2>
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-2.5 sm:gap-4">
+        <div
+          class="p-3 sm:p-4 rounded-2xl bg-neutral-900/50 border border-neutral-800 text-center card-hover relative overflow-hidden">
+          <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-white to-neutral-400"></div>
+          <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-white/5 flex items-center justify-center mx-auto mb-2"><span
+              class="iconify text-lg sm:text-xl" data-icon="logos:vercel-icon"></span></div>
+          <h4 class="text-white font-semibold text-[10px] sm:text-xs">Vercel</h4>
+          <p class="text-neutral-500 text-[9px] sm:text-xs mb-1">Frontend</p><span
+            class="tag bg-neutral-800 text-neutral-400 text-[8px]">React</span>
+        </div>
+        <div
+          class="p-3 sm:p-4 rounded-2xl bg-neutral-900/50 border border-neutral-800 text-center card-hover relative overflow-hidden">
+          <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-neuro-green to-neuro-cyan"></div>
+          <div
+            class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-neuro-green/5 flex items-center justify-center mx-auto mb-2">
+            <span class="iconify text-neuro-green text-lg sm:text-xl" data-icon="lucide:server"></span>
+          </div>
+          <h4 class="text-white font-semibold text-[10px] sm:text-xs">Render</h4>
+          <p class="text-neutral-500 text-[9px] sm:text-xs mb-1">Backend</p><span
+            class="tag bg-neutral-800 text-neutral-400 text-[8px]">Node.js</span>
+        </div>
+        <div
+          class="p-3 sm:p-4 rounded-2xl bg-neutral-900/50 border border-neutral-800 text-center card-hover relative overflow-hidden">
+          <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-neuro-amber to-neuro-red"></div>
+          <div
+            class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-neuro-amber/5 flex items-center justify-center mx-auto mb-2">
+            <span class="iconify text-neuro-amber text-lg sm:text-xl" data-icon="lucide:smile"></span>
+          </div>
+          <h4 class="text-white font-semibold text-[10px] sm:text-xs">Hugging Face</h4>
+          <p class="text-neutral-500 text-[9px] sm:text-xs mb-1">ML Service</p><span
+            class="tag bg-neutral-800 text-neutral-400 text-[8px]">FastAPI</span>
+        </div>
+        <div
+          class="p-3 sm:p-4 rounded-2xl bg-neutral-900/50 border border-neutral-800 text-center card-hover relative overflow-hidden">
+          <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-[#47A248] to-[#129B00]"></div>
+          <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-[#47A248]/5 flex items-center justify-center mx-auto mb-2">
+            <span class="iconify text-[#47A248] text-lg sm:text-xl" data-icon="logos:mongodb-icon"></span>
+          </div>
+          <h4 class="text-white font-semibold text-[10px] sm:text-xs">MongoDB Atlas</h4>
+          <p class="text-neutral-500 text-[9px] sm:text-xs mb-1">Database</p><span
+            class="tag bg-neutral-800 text-neutral-400 text-[8px]">Cloud</span>
+        </div>
+      </div>
+      <div class="mt-3 sm:mt-5 p-3 rounded-xl border border-neuro-blue/20 bg-neuro-blue/5 flex items-center gap-3"><span
+          class="iconify text-neuro-blue text-base flex-shrink-0" data-icon="lucide:globe"></span>
+        <div>
+          <p class="text-white text-[10px] sm:text-xs font-medium">Live URL</p><a
+            href="https://neuroscan-ai-navy.vercel.app" target="_blank"
+            class="text-neuro-blue text-[10px] sm:text-xs hover:underline break-all">https://neuroscan-ai-navy.vercel.app</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 18 — Team -->
+  <div class="slide" id="slide-18">
+    <div class="si">
+      <span class="tag bg-neuro-purple/10 text-neuro-purple border border-neuro-purple/20"><span
+          class="iconify text-[10px]" data-icon="lucide:users"></span> Team</span>
+      <h2 class="text-2xl sm:text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight mt-3 mb-2 sm:mb-3">Student <span
+          class="gradient-text">Contribution</span></h2>
+      <p class="text-neutral-500 text-xs sm:text-base mb-5 sm:mb-8">Each member played a vital role</p>
+      <div class="grid sm:grid-cols-2 gap-2.5 sm:gap-4">
+        <div class="p-3 sm:p-5 rounded-2xl border border-neuro-blue/20 bg-neuro-blue/5 glow-blue card-hover">
+          <div class="flex items-center gap-2.5 mb-2 sm:mb-3">
+            <div
+              class="w-9 h-9 sm:w-11 sm:h-11 rounded-full bg-gradient-to-br from-neuro-blue to-neuro-cyan flex items-center justify-center text-[10px] sm:text-xs font-bold flex-shrink-0">
+              AT</div>
+            <div>
+              <p class="text-white font-semibold text-xs sm:text-sm">Anand TP</p><span
+                class="tag bg-neuro-blue/20 text-neuro-blue text-[8px]">Lead Dev</span>
+            </div>
+          </div>
+          <p class="text-neutral-400 text-[10px] sm:text-xs leading-relaxed">System architecture, full-stack
+            development, ML model training & integration</p>
+        </div>
+        <div class="p-3 sm:p-5 rounded-2xl border border-neuro-green/20 bg-neuro-green/5 card-hover">
+          <div class="flex items-center gap-2.5 mb-2 sm:mb-3">
+            <div
+              class="w-9 h-9 sm:w-11 sm:h-11 rounded-full bg-gradient-to-br from-neuro-green to-neuro-cyan flex items-center justify-center text-[10px] sm:text-xs font-bold flex-shrink-0">
+              HD</div>
+            <div>
+              <p class="text-white font-semibold text-xs sm:text-sm">Haridev D</p><span
+                class="tag bg-neuro-green/20 text-neuro-green text-[8px]">Docs</span>
+            </div>
+          </div>
+          <p class="text-neutral-400 text-[10px] sm:text-xs leading-relaxed">Documentation, project planning, workflow
+            design</p>
+        </div>
+        <div class="p-3 sm:p-5 rounded-2xl border border-neuro-purple/20 bg-neuro-purple/5 card-hover">
+          <div class="flex items-center gap-2.5 mb-2 sm:mb-3">
+            <div
+              class="w-9 h-9 sm:w-11 sm:h-11 rounded-full bg-gradient-to-br from-neuro-purple to-neuro-blue flex items-center justify-center text-[10px] sm:text-xs font-bold flex-shrink-0">
+              AM</div>
+            <div>
+              <p class="text-white font-semibold text-xs sm:text-sm">Adhwaith M</p><span
+                class="tag bg-neuro-purple/20 text-neuro-purple text-[8px]">UI/UX</span>
+            </div>
+          </div>
+          <p class="text-neutral-400 text-[10px] sm:text-xs leading-relaxed">UI layout design, page structure &
+            navigation setup</p>
+        </div>
+        <div class="p-3 sm:p-5 rounded-2xl border border-neuro-amber/20 bg-neuro-amber/5 card-hover">
+          <div class="flex items-center gap-2.5 mb-2 sm:mb-3">
+            <div
+              class="w-9 h-9 sm:w-11 sm:h-11 rounded-full bg-gradient-to-br from-neuro-amber to-neuro-red flex items-center justify-center text-[10px] sm:text-xs font-bold flex-shrink-0">
+              MU</div>
+            <div>
+              <p class="text-white font-semibold text-xs sm:text-sm">Midhun U</p><span
+                class="tag bg-neuro-amber/20 text-neuro-amber text-[8px]">QA</span>
+            </div>
+          </div>
+          <p class="text-neutral-400 text-[10px] sm:text-xs leading-relaxed">Testing, debugging & system integration
+            support</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 19 — Challenges -->
+  <div class="slide" id="slide-19">
+    <div class="si">
+      <span class="tag bg-neuro-red/10 text-neuro-red border border-neuro-red/20"><span class="iconify text-[10px]"
+          data-icon="lucide:flame"></span> Challenges</span>
+      <h2 class="text-2xl sm:text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight mt-3 mb-6 sm:mb-8">Challenges
+        Faced</h2>
+      <div class="grid sm:grid-cols-2 gap-2.5 sm:gap-4">
+        <div class="p-3 sm:p-4 rounded-2xl bg-neutral-900/50 border border-neutral-800 card-hover">
+          <div class="flex items-center gap-2 mb-2"><span class="iconify text-neuro-purple text-sm"
+              data-icon="lucide:container"></span>
+            <h4 class="text-white font-semibold text-[10px] sm:text-xs">ML Model Deployment</h4>
+          </div>
+          <p class="text-neutral-500 text-[9px] sm:text-xs mb-2">Deploying PyTorch model as separate API with
+            dependencies.</p>
+          <div class="flex items-center gap-1.5"><span class="iconify text-neuro-green text-xs"
+              data-icon="lucide:check"></span><span class="text-neuro-green text-[9px] sm:text-[10px]">Hugging Face +
+              FastAPI</span></div>
+        </div>
+        <div class="p-3 sm:p-4 rounded-2xl bg-neutral-900/50 border border-neutral-800 card-hover">
+          <div class="flex items-center gap-2 mb-2"><span class="iconify text-neuro-amber text-sm"
+              data-icon="lucide:hard-drive"></span>
+            <h4 class="text-white font-semibold text-[10px] sm:text-xs">Large Images</h4>
+          </div>
+          <p class="text-neutral-500 text-[9px] sm:text-xs mb-2">High-resolution MRI file upload and processing.</p>
+          <div class="flex items-center gap-1.5"><span class="iconify text-neuro-green text-xs"
+              data-icon="lucide:check"></span><span class="text-neuro-green text-[9px] sm:text-[10px]">Multer +
+              optimized transfer</span></div>
+        </div>
+        <div class="p-3 sm:p-4 rounded-2xl bg-neutral-900/50 border border-neutral-800 card-hover">
+          <div class="flex items-center gap-2 mb-2"><span class="iconify text-neuro-blue text-sm"
+              data-icon="lucide:arrow-left-right"></span>
+            <h4 class="text-white font-semibold text-[10px] sm:text-xs">API Communication</h4>
+          </div>
+          <p class="text-neutral-500 text-[9px] sm:text-xs mb-2">Coordinating 3 services with error handling and CORS.
+          </p>
+          <div class="flex items-center gap-1.5"><span class="iconify text-neuro-green text-xs"
+              data-icon="lucide:check"></span><span class="text-neuro-green text-[9px] sm:text-[10px]">Axios + CORS
+              middleware</span></div>
+        </div>
+        <div class="p-3 sm:p-4 rounded-2xl bg-neutral-900/50 border border-neutral-800 card-hover">
+          <div class="flex items-center gap-2 mb-2"><span class="iconify text-neuro-cyan text-sm"
+              data-icon="lucide:database"></span>
+            <h4 class="text-white font-semibold text-[10px] sm:text-xs">Database Storage</h4>
+          </div>
+          <p class="text-neutral-500 text-[9px] sm:text-xs mb-2">Proper schema design in MongoDB for results and users.
+          </p>
+          <div class="flex items-center gap-1.5"><span class="iconify text-neuro-green text-xs"
+              data-icon="lucide:check"></span><span class="text-neuro-green text-[9px] sm:text-[10px]">Mongoose +
+              Atlas</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 20 — Future -->
+  <div class="slide" id="slide-20">
+    <div class="si">
+      <span class="tag bg-neuro-green/10 text-neuro-green border border-neuro-green/20"><span
+          class="iconify text-[10px]" data-icon="lucide:rocket"></span> Future</span>
+      <h2 class="text-2xl sm:text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight mt-3 mb-6 sm:mb-8">Future
+        Improvements</h2>
+      <div class="grid sm:grid-cols-2 gap-2.5 sm:gap-4">
+        <div
+          class="group p-3 sm:p-4 rounded-2xl border border-neutral-800 bg-neutral-900/30 card-hover relative overflow-hidden">
+          <div
+            class="absolute inset-0 bg-gradient-to-br from-neuro-blue/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
+          </div>
+          <div class="relative z-10 flex items-start gap-2.5">
+            <div
+              class="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-neuro-blue/10 flex items-center justify-center flex-shrink-0">
+              <span class="iconify text-neuro-blue text-sm sm:text-base" data-icon="lucide:stethoscope"></span>
+            </div>
+            <div>
+              <h4 class="text-white font-semibold text-[10px] sm:text-xs mb-0.5">Doctor Dashboard</h4>
+              <p class="text-neutral-500 text-[9px] sm:text-xs">Dedicated interface for doctors to review AI predictions
+              </p>
+            </div>
+          </div>
+        </div>
+        <div
+          class="group p-3 sm:p-4 rounded-2xl border border-neutral-800 bg-neutral-900/30 card-hover relative overflow-hidden">
+          <div
+            class="absolute inset-0 bg-gradient-to-br from-neuro-green/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
+          </div>
+          <div class="relative z-10 flex items-start gap-2.5">
+            <div
+              class="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-neuro-green/10 flex items-center justify-center flex-shrink-0">
+              <span class="iconify text-neuro-green text-sm sm:text-base" data-icon="lucide:smartphone"></span>
+            </div>
+            <div>
+              <h4 class="text-white font-semibold text-[10px] sm:text-xs mb-0.5">Mobile App</h4>
+              <p class="text-neutral-500 text-[9px] sm:text-xs">React Native for on-the-go analysis</p>
+            </div>
+          </div>
+        </div>
+        <div
+          class="group p-3 sm:p-4 rounded-2xl border border-neutral-800 bg-neutral-900/30 card-hover relative overflow-hidden">
+          <div
+            class="absolute inset-0 bg-gradient-to-br from-neuro-purple/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
+          </div>
+          <div class="relative z-10 flex items-start gap-2.5">
+            <div
+              class="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-neuro-purple/10 flex items-center justify-center flex-shrink-0">
+              <span class="iconify text-neuro-purple text-sm sm:text-base" data-icon="lucide:trending-up"></span>
+            </div>
+            <div>
+              <h4 class="text-white font-semibold text-[10px] sm:text-xs mb-0.5">Higher Accuracy</h4>
+              <p class="text-neutral-500 text-[9px] sm:text-xs">Larger datasets, ensemble methods</p>
+            </div>
+          </div>
+        </div>
+        <div
+          class="group p-3 sm:p-4 rounded-2xl border border-neutral-800 bg-neutral-900/30 card-hover relative overflow-hidden">
+          <div
+            class="absolute inset-0 bg-gradient-to-br from-neuro-amber/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
+          </div>
+          <div class="relative z-10 flex items-start gap-2.5">
+            <div
+              class="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-neuro-amber/10 flex items-center justify-center flex-shrink-0">
+              <span class="iconify text-neuro-amber text-sm sm:text-base" data-icon="lucide:scissors"></span>
+            </div>
+            <div>
+              <h4 class="text-white font-semibold text-[10px] sm:text-xs mb-0.5">Tumor Segmentation</h4>
+              <p class="text-neutral-500 text-[9px] sm:text-xs">U-Net pixel-level boundary detection</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 21 — Conclusion -->
+  <div class="slide brain-bg" id="slide-21">
+    <div class="si flex flex-col items-center justify-center text-center" style="min-height:calc(100dvh - 120px)">
+      <div
+        class="absolute top-0 left-1/2 -translate-x-1/2 w-[350px] h-[350px] sm:w-[600px] sm:h-[600px] rounded-full bg-neuro-blue/5 blur-[90px] sm:blur-[120px] pointer-events-none">
+      </div>
+      <div class="relative z-10">
+        <div
+          class="w-9 h-9 sm:w-12 sm:h-12 rounded-xl bg-neuro-green/20 border border-neuro-green/30 flex items-center justify-center mx-auto mb-5 sm:mb-8">
+          <span class="iconify text-neuro-green text-lg sm:text-2xl" data-icon="lucide:check-circle-2"></span>
+        </div>
+        <h2 class="text-3xl sm:text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight mb-5 sm:mb-8"><span
+            class="gradient-text-green">Conclusion</span></h2>
+        <div class="space-y-1.5 sm:space-y-2 mb-6 sm:mb-8">
+          <div class="flex items-center gap-2 justify-center"><span class="iconify text-neuro-blue text-sm sm:text-base"
+              data-icon="lucide:check"></span>
+            <p class="text-neutral-300 text-xs sm:text-lg">AI improves medical image analysis</p>
+          </div>
+          <div class="flex items-center gap-2 justify-center"><span class="iconify text-neuro-blue text-sm sm:text-base"
+              data-icon="lucide:check"></span>
+            <p class="text-neutral-300 text-xs sm:text-lg">Fast, scalable system</p>
+          </div>
+          <div class="flex items-center gap-2 justify-center"><span class="iconify text-neuro-blue text-sm sm:text-base"
+              data-icon="lucide:check"></span>
+            <p class="text-neutral-300 text-xs sm:text-lg">Real-world live deployment</p>
+          </div>
+        </div>
+        <div
+          class="p-3 sm:p-5 rounded-2xl border border-neuro-blue/20 bg-neuro-blue/5 glow-blue inline-block mb-5 sm:mb-8">
+          <p class="text-neutral-400 text-[10px] sm:text-xs mb-1">Live Application</p><a
+            href="https://neuroscan-ai-navy.vercel.app" target="_blank"
+            class="text-neuro-blue text-sm sm:text-lg font-semibold hover:underline break-all">https://neuroscan-ai-navy.vercel.app</a>
+        </div>
+        <p class="text-neutral-700 text-[9px] sm:text-xs">Thank you for your attention</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- NAV -->
+  <div
+    class="fixed bottom-0 left-0 right-0 z-50 flex items-center justify-between px-3 sm:px-6 py-2.5 sm:py-3 bg-gradient-to-t from-brand-black via-brand-black/90 to-transparent pointer-events-none">
+    <button onclick="prevSlide()" id="btn-prev"
+      class="flex items-center gap-1 text-[10px] sm:text-xs text-neutral-500 hover:text-white transition-colors disabled:opacity-20 pointer-events-auto"
+      disabled><span class="iconify" data-icon="lucide:arrow-left"></span><span
+        class="hidden sm:inline">Prev</span></button>
+    <div
+      class="flex items-center gap-0.5 sm:gap-1 pointer-events-auto overflow-x-auto max-w-[55vw] sm:max-w-none py-1 hide-scrollbar"
+      id="dots-container"></div>
+    <button onclick="nextSlide()" id="btn-next"
+      class="flex items-center gap-1 text-[10px] sm:text-xs text-neutral-500 hover:text-white transition-colors pointer-events-auto"><span
+        class="hidden sm:inline">Next</span><span class="iconify" data-icon="lucide:arrow-right"></span></button>
+  </div>
+  <div class="fixed top-3 sm:top-4 right-3 sm:right-5 z-50"><span
+      class="text-neutral-600 text-[9px] sm:text-[10px] font-mono" id="slide-counter">01/21</span></div>
+  <style>
+    .hide-scrollbar::-webkit-scrollbar {
+      display: none
+    }
+
+    .hide-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none
+    }
+  </style>
+
+  <script>
+    const T = 21; let c = 1;
+    function gd() { const el = document.getElementById('dots-container'); el.innerHTML = ''; for (let i = 1; i <= T; i++) { const d = document.createElement('div'); d.className = 'dot-ind' + (i === c ? ' active' : ''); d.onclick = () => go(i); el.appendChild(d) } }
+    function up() { document.querySelectorAll('.slide').forEach(s => { s.classList.remove('active'); s.classList.remove('anim'); }); const t = document.getElementById('slide-' + c); if (t) { t.classList.add('active'); void t.offsetWidth; t.classList.add('anim'); t.scrollTop = 0 } gd(); document.getElementById('slide-counter').textContent = String(c).padStart(2, '0') + '/' + String(T).padStart(2, '0'); document.getElementById('btn-prev').disabled = c === 1; document.getElementById('btn-next').disabled = c === T }
+    function nx() { if (c < T) { c++; up() } } function pv() { if (c > 1) { c--; up() } } function go(n) { if (n >= 1 && n <= T) { c = n; up() } }
+    document.addEventListener('keydown', e => { const s = document.querySelector('.slide.active'); if (!s) return; const t = s.scrollTop <= 3, b = s.scrollTop + s.clientHeight >= s.scrollHeight - 8; if (e.key === 'ArrowDown' || e.key === ' ') { if (!b) { e.preventDefault(); s.scrollBy({ top: 140, behavior: 'smooth' }); return } e.preventDefault(); nx() } else if (e.key === 'ArrowUp') { if (!t) { e.preventDefault(); s.scrollBy({ top: -140, behavior: 'smooth' }); return } e.preventDefault(); pv() } else if (e.key === 'ArrowRight') { e.preventDefault(); nx() } else if (e.key === 'ArrowLeft') { e.preventDefault(); pv() } else if (e.key === 'Home') { e.preventDefault(); go(1) } else if (e.key === 'End') { e.preventDefault(); go(T) } });
+    let sx = 0, sy = 0; document.addEventListener('touchstart', e => { sx = e.changedTouches[0].screenX; sy = e.changedTouches[0].screenY }, false); document.addEventListener('touchend', e => { const dx = sx - e.changedTouches[0].screenX, dy = sy - e.changedTouches[0].screenY; if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 50) { dx > 0 ? nx() : pv() } }, false);
+    gd(); up();
+  </script>
+</body>
+
+</html>
